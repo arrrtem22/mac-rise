@@ -1,4 +1,4 @@
-# Wake Alarm
+# MacRise
 
 A simple macOS alarm script that wakes the Mac, chooses a random file from `music/`, raises system volume, plays for 10 locked minutes, then stops automatically.
 
@@ -23,8 +23,8 @@ This is intentionally simple and cannot defend against force quit, `kill -9`, de
 ## Uninstall
 
 ```bash
-launchctl unload "$HOME/Library/LaunchAgents/local.wake-alarm.plist"
-rm "$HOME/Library/LaunchAgents/local.wake-alarm.plist"
+launchctl unload "$HOME/Library/LaunchAgents/local.mac-rise.plist"
+rm "$HOME/Library/LaunchAgents/local.mac-rise.plist"
 sudo pmset repeat cancel
 ```
 

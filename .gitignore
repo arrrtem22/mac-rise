@@ -1,3 +1,5 @@
 .DS_Store
 wake-alarm.log
 wake-alarm.err.log
+mac-rise.log
+mac-rise.err.log

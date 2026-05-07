@@ -2,8 +2,10 @@
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LABEL="local.wake-alarm"
+LABEL="local.mac-rise"
+OLD_LABEL="local.wake-alarm"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+OLD_PLIST="$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
 HOUR="${1:-8}"
 MINUTE="${2:-0}"
 
@@ -28,6 +30,11 @@ WAKE_HOUR=$((MINUTE == 0 ? (HOUR + 23) % 24 : HOUR))
 chmod +x "$APP_DIR/wake-alarm.sh"
 mkdir -p "$HOME/Library/LaunchAgents"
 
+if [[ -f "$OLD_PLIST" ]]; then
+  launchctl unload "$OLD_PLIST" >/dev/null 2>&1 || true
+  rm "$OLD_PLIST"
+fi
+
 cat > "$PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -50,9 +57,9 @@ cat > "$PLIST" <<PLIST
     <integer>$MINUTE</integer>
   </dict>
   <key>StandardOutPath</key>
-  <string>$APP_DIR/wake-alarm.log</string>
+  <string>$APP_DIR/mac-rise.log</string>
   <key>StandardErrorPath</key>
-  <string>$APP_DIR/wake-alarm.err.log</string>
+  <string>$APP_DIR/mac-rise.err.log</string>
 </dict>
 </plist>
 PLIST
