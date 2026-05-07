@@ -65,7 +65,13 @@ echo "Alarm will run daily at $(printf '%02d:%02d' "$HOUR" "$MINUTE")."
 
 if command -v pmset >/dev/null 2>&1; then
   echo "Configuring macOS wake/power-on one minute before alarm."
-  sudo pmset repeat wakeorpoweron MTWRFSU "$(printf '%02d:%02d:00' "$WAKE_HOUR" "$WAKE_MINUTE")"
+  WAKE_TIME="$(printf '%02d:%02d:00' "$WAKE_HOUR" "$WAKE_MINUTE")"
+  if sudo -n true 2>/dev/null; then
+    sudo pmset repeat wakeorpoweron MTWRFSU "$WAKE_TIME"
+  else
+    echo "Run this once to allow macOS to wake before the alarm:"
+    echo "sudo pmset repeat wakeorpoweron MTWRFSU $WAKE_TIME"
+  fi
 fi
 
 echo "Done. Keep the laptop plugged in and do not fully shut it down."
