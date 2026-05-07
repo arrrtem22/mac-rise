@@ -58,7 +58,7 @@ end if
 APPLESCRIPT
 }
 
-set_volume_at_least_minimum
+osascript -e "set volume output volume $TARGET_VOLUME" >/dev/null 2>&1 || true
 
 stop_after_lock() {
   if (( SECONDS < ENDS_AT )); then
