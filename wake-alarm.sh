@@ -4,9 +4,18 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MUSIC_DIR="${MUSIC_DIR:-$APP_DIR/music}"
 LOCK_SECONDS="${LOCK_SECONDS:-600}"
-TARGET_VOLUME="${TARGET_VOLUME:-100}"
-MIN_VOLUME="${MIN_VOLUME:-50}"
-VOLUME_CHECK_SECONDS="${VOLUME_CHECK_SECONDS:-2}"
+MAX_VOLUME_LEVEL="${MAX_VOLUME_LEVEL:-16}"
+MIN_VOLUME_LEVEL="${MIN_VOLUME_LEVEL:-5}"
+TARGET_VOLUME_LEVEL="${TARGET_VOLUME_LEVEL:-16}"
+VOLUME_CHECK_SECONDS="${VOLUME_CHECK_SECONDS:-0.5}"
+
+volume_level_to_percent() {
+  local level="$1"
+  echo $(((level * 100 + MAX_VOLUME_LEVEL - 1) / MAX_VOLUME_LEVEL))
+}
+
+MIN_VOLUME="${MIN_VOLUME:-$(volume_level_to_percent "$MIN_VOLUME_LEVEL")}"
+TARGET_VOLUME="${TARGET_VOLUME:-$(volume_level_to_percent "$TARGET_VOLUME_LEVEL")}"
 
 if [[ ! -d "$MUSIC_DIR" ]]; then
   echo "Music directory not found: $MUSIC_DIR" >&2

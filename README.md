@@ -13,10 +13,10 @@ That installs a LaunchAgent for 8:00 AM and asks `pmset` to wake or power on the
 ## Test Now
 
 ```bash
-LOCK_SECONDS=20 ./wake-alarm.sh
+LOCK_SECONDS=20 MIN_VOLUME_LEVEL=5 TARGET_VOLUME_LEVEL=8 ./wake-alarm.sh
 ```
 
-During the locked period, `Ctrl-C` and normal termination are ignored. The script also checks volume every 2 seconds and raises it if it drops below `MIN_VOLUME`.
+During the locked period, `Ctrl-C` and normal termination are ignored. The script also checks volume every 0.5 seconds and raises it if it drops below `MIN_VOLUME_LEVEL`.
 
 This is intentionally simple and cannot defend against force quit, `kill -9`, deleting the LaunchAgent, muting external hardware, disconnecting speakers, or powering the Mac off.
 
@@ -32,6 +32,15 @@ sudo pmset repeat cancel
 
 - Put audio files in `music/`.
 - Set `LOCK_SECONDS` to change the forced play duration.
-- Set `TARGET_VOLUME` from `0` to `100`.
-- Set `MIN_VOLUME` from `0` to `100`; default is `50`.
+- Set `MIN_VOLUME_LEVEL` from `0` to `16`; default is `5`, matching the 5th macOS volume bar.
+- Set `TARGET_VOLUME_LEVEL` from `0` to `16`; default is `16`.
+- Set `MIN_VOLUME` or `TARGET_VOLUME` from `0` to `100` only if you want exact macOS percentage values.
 - Set `MUSIC_DIR` to use a different folder.
+
+## Stop a Test
+
+```bash
+pkill -9 -f '/Users/artemiioliinyk/projects/mac-rise/wake-alarm.sh'
+pkill -9 afplay
+pkill -9 caffeinate
+```
