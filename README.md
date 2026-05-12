@@ -1,14 +1,14 @@
 # MacRise
 
-A simple macOS alarm script that wakes the Mac, chooses a random file from `music/`, raises system volume, plays for 10 locked minutes, then stops automatically.
+A simple macOS alarm script that wakes the Mac, shuffles and plays files from `music/`, gradually raises system volume until user activity is detected, plays for a locked duration (default 5 minutes), then stops automatically.
 
 ## Install
 
 ```bash
-./install-alarm.sh
+./install-alarm.sh 6 45
 ```
 
-That installs a LaunchAgent for 8:00 AM and asks `pmset` to wake or power on the Mac at 7:59 AM. The LaunchAgent is installed in `~/Library/LaunchAgents`, so macOS loads the schedule again after restart/login.
+That installs a LaunchAgent for 6:45 AM and asks `pmset` to wake or power on the Mac at 6:44 AM. The LaunchAgent is installed in `~/Library/LaunchAgents`, so macOS loads the schedule again after restart/login.
 
 ## Test Now
 
@@ -16,7 +16,7 @@ That installs a LaunchAgent for 8:00 AM and asks `pmset` to wake or power on the
 LOCK_SECONDS=20 MIN_VOLUME_LEVEL=5 TARGET_VOLUME_LEVEL=8 ./wake-alarm.sh
 ```
 
-During the locked period, `Ctrl-C` and normal termination are ignored. The script also checks volume every 0.5 seconds and raises it if it drops below `MIN_VOLUME_LEVEL`.
+During the locked period, `Ctrl-C` and normal termination are ignored. The script gradually increases the volume by 1 level every minute starting from `MIN_VOLUME_LEVEL`. Once you move your mouse or use your keyboard, the volume stops increasing.
 
 This is intentionally simple and cannot defend against force quit, `kill -9`, deleting the LaunchAgent, muting external hardware, disconnecting speakers, or powering the Mac off.
 
