@@ -58,39 +58,39 @@ echo "Locked duration: $LOCK_SECONDS seconds (Ends at approx. SECONDS=$ENDS_AT)"
 osascript -e "set volume output volume $(volume_level_to_percent "$CURRENT_VOLUME_LEVEL")" >/dev/null 2>&1 || true
 
 update_volume() {
+  local idle_time_int=-1
   if [[ $MOVEMENT_DETECTED -eq 0 ]]; then
-    # Ignore activity for the first 10 seconds (grace period) to allow manual starting
-    if (( SECONDS < 10 )); then
-      return 0
-    fi
-
-    local idle_time_int
+    # Get idle time
     idle_time_int=$(ioreg -c IOHIDSystem | awk '/HIDIdleTime/ {print int($NF/1000000000); exit}' 2>/dev/null)
     
-    if [[ -n "$idle_time_int" ]] && (( idle_time_int < 5 )); then
-      MOVEMENT_DETECTED=1
-      echo "[$(date +%T)] Activity detected! Volume will stay at level $CURRENT_VOLUME_LEVEL."
-    else
-      if (( SECONDS - LAST_VOLUME_INCREASE_TIME >= VOLUME_INCREASE_INTERVAL )); then
+    # Grace period: only start detecting movement after 10 seconds
+    if (( SECONDS >= 10 )); then
+      if [[ -n "$idle_time_int" ]] && (( idle_time_int < 5 )); then
+        MOVEMENT_DETECTED=1
+        echo "[$(date +%T)] Activity detected (Idle: ${idle_time_int}s)! Volume locked at level $CURRENT_VOLUME_LEVEL."
+      elif (( SECONDS - LAST_VOLUME_INCREASE_TIME >= VOLUME_INCREASE_INTERVAL )); then
         if (( CURRENT_VOLUME_LEVEL < TARGET_VOLUME_LEVEL )); then
           CURRENT_VOLUME_LEVEL=$((CURRENT_VOLUME_LEVEL + 1))
-          echo "[$(date +%T)] No activity. Increasing volume to level $CURRENT_VOLUME_LEVEL."
+          echo "[$(date +%T)] No activity (Idle: ${idle_time_int}s). Increasing volume to level $CURRENT_VOLUME_LEVEL."
         fi
         LAST_VOLUME_INCREASE_TIME=$SECONDS
       fi
     fi
   fi
 
-  local target_percent
-  target_percent=$(volume_level_to_percent "$CURRENT_VOLUME_LEVEL")
+  # Only enforce volume if movement has NOT been detected yet
+  if [[ $MOVEMENT_DETECTED -eq 0 ]]; then
+    local target_percent
+    target_percent=$(volume_level_to_percent "$CURRENT_VOLUME_LEVEL")
 
-  osascript <<APPLESCRIPT >/dev/null 2>&1 || true
+    osascript <<APPLESCRIPT >/dev/null 2>&1 || true
 set targetVolume to $target_percent
 set currentVolume to output volume of (get volume settings)
 if currentVolume < targetVolume then
   set volume output volume targetVolume
 end if
 APPLESCRIPT
+  fi
 }
 
 stop_after_lock() {
