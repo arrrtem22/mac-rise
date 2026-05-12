@@ -16,7 +16,7 @@ That installs a LaunchAgent for 6:45 AM and asks `pmset` to wake or power on the
 LOCK_SECONDS=20 MIN_VOLUME_LEVEL=5 TARGET_VOLUME_LEVEL=8 ./wake-alarm.sh
 ```
 
-During the locked period, `Ctrl-C` and normal termination are ignored. The script gradually increases the volume by 1 level every minute starting from `MIN_VOLUME_LEVEL`. Once you move your mouse or use your keyboard, the volume stops increasing.
+During the locked period, `Ctrl-C` and normal termination are ignored. The script gradually increases the volume by 1 level every 30 seconds starting from `MIN_VOLUME_LEVEL`. Once you move your mouse or use your keyboard, the volume stops increasing.
 
 This is intentionally simple and cannot defend against force quit, `kill -9`, deleting the LaunchAgent, muting external hardware, disconnecting speakers, or powering the Mac off.
 
