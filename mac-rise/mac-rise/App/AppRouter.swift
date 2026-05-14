@@ -26,9 +26,6 @@ struct AppRouter: View {
             case .settings:
                 SettingsView(appState: appState)
 
-            case .login:
-                LoginView(appState: appState)
-
             case .subscription:
                 SubscriptionView(appState: appState)
             }

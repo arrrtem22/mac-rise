@@ -15,7 +15,6 @@ enum AppConstants {
     enum Keys {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let alarmConfiguration     = "alarmConfiguration"
-        static let isAuthenticated        = "isAuthenticated"
         static let subscriptionStatus     = "subscriptionStatus"
     }
 

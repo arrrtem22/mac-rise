@@ -11,7 +11,6 @@ enum AppRoute: Equatable {
     case onboarding
     case main
     case settings
-    case login
     case subscription
 }
 
@@ -26,10 +25,6 @@ final class AppState {
 
     // MARK: - Engine
     let alarmEngine = AlarmEngine()
-
-    // MARK: - Auth (scaffold)
-    var isAuthenticated: Bool = false
-    var userEmail: String? = nil
 
     // MARK: - Subscription (scaffold)
     var isSubscribed: Bool = false
