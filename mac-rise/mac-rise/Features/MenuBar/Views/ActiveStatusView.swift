@@ -3,9 +3,7 @@
 //  mac-rise
 //
 //  Dropdown panel content when the alarm is actively ringing.
-//  Shows: hero countdown, stop/extend buttons, now playing,
-//  volume level with segmented bar, next increase, activity status.
-//  Design follows LookAway's active break state + screen_2.png reference.
+//  All data is live from AlarmEngine.
 //
 
 import SwiftUI
@@ -13,23 +11,13 @@ import SwiftUI
 struct ActiveStatusView: View {
     @Bindable var appState: AppState
 
-    // For demo purposes — these will come from the ViewModel in production
-    private var remainingSeconds: Int {
-        if case .ringing(let s) = appState.alarmState { return s }
-        return 0
-    }
+    private var engine: AlarmEngine { appState.alarmEngine }
 
     private var remainingFormatted: String {
-        let m = remainingSeconds / 60
-        let s = remainingSeconds % 60
+        let m = engine.remainingSeconds / 60
+        let s = engine.remainingSeconds % 60
         return String(format: "%d:%02d", m, s)
     }
-
-    // Demo/scaffold values
-    @State private var currentVolume: Int = 5
-    @State private var nextIncreaseIn: Int = 18
-    @State private var isMovementDetected: Bool = false
-    @State private var currentTrack: String = "David Goggins"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,13 +44,13 @@ struct ActiveStatusView: View {
             // MARK: - Action buttons
             HStack(spacing: 10) {
                 DropdownPillButton(title: "Stop", icon: "lock.fill", isPrimary: true) {
-                    // TODO: Stop alarm (only after lock expires)
+                    engine.stopAlarm()
                 }
                 DropdownPillButton(title: "+1m", icon: nil, isPrimary: false) {
-                    // TODO: Add 1 minute
+                    engine.addTime(minutes: 1)
                 }
                 DropdownPillButton(title: "+5m", icon: nil, isPrimary: false) {
-                    // TODO: Add 5 minutes
+                    engine.addTime(minutes: 5)
                 }
             }
             .padding(.horizontal, 20)
@@ -75,7 +63,7 @@ struct ActiveStatusView: View {
                     icon: "play.circle.fill",
                     iconColor: MacRiseColors.textSecondary,
                     label: "Now Playing",
-                    value: currentTrack,
+                    value: engine.currentTrackName,
                     isSubtitle: true
                 )
 
@@ -97,14 +85,13 @@ struct ActiveStatusView: View {
 
                         Spacer()
 
-                        Text("Level \(currentVolume)/16")
+                        Text("Level \(engine.actualSystemVolume)/16")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white.opacity(0.55))
                     }
 
-                    // Segmented volume bar
                     VolumeSegmentedBar(
-                        currentLevel: currentVolume,
+                        currentLevel: engine.actualSystemVolume,
                         maxLevel: 16
                     )
                 }
@@ -124,12 +111,12 @@ struct ActiveStatusView: View {
                     CompactInfoTile(
                         icon: "timer",
                         label: "Next increase",
-                        value: "in \(nextIncreaseIn)s"
+                        value: "in \(engine.nextVolumeIncreaseIn)s"
                     )
                     CompactInfoTile(
                         icon: "figure.walk",
                         label: "Activity",
-                        value: isMovementDetected ? "Movement!" : "No movement"
+                        value: engine.isMovementDetected ? "Detected ✓" : "No movement"
                     )
                 }
             }
@@ -158,7 +145,7 @@ struct VolumeSegmentedBar: View {
     }
 }
 
-// MARK: - Compact info tile (for side-by-side layout)
+// MARK: - Compact info tile
 
 struct CompactInfoTile: View {
     let icon: String

@@ -109,7 +109,6 @@ struct DropdownInfoCardWithBar: View {
     let iconColor: Color
     let label: String
     let value: String
-    let progress: Double
 
     var body: some View {
         VStack(spacing: 8) {
@@ -134,20 +133,6 @@ struct DropdownInfoCardWithBar: View {
                     .foregroundColor(.white.opacity(0.45))
                     .lineLimit(1)
             }
-
-            // Thin progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.white.opacity(0.10))
-                        .frame(height: 3)
-
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.white.opacity(0.45))
-                        .frame(width: geo.size.width * min(max(progress, 0), 1), height: 3)
-                }
-            }
-            .frame(height: 3)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)

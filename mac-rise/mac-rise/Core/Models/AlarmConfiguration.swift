@@ -12,7 +12,7 @@ struct AlarmConfiguration: Codable, Equatable {
     // MARK: - Music
     var musicSource: MusicSource = .defaultLocation
     var customMusicURL: URL? = nil
-    var musicDirectory: String = "~/mac-rise/music"
+    var musicDirectory: String = "~/projects/mac-rise/music"
     var trackCount: Int = 40
 
     // MARK: - Schedule
@@ -24,7 +24,7 @@ struct AlarmConfiguration: Codable, Equatable {
     var startingVolume: Int = 3
     var targetVolume: Int = 16
     var maxVolumeLevel: Int = 16
-    var increaseInterval: Int = 30      // seconds
+    var increaseInterval: Int = 15      // seconds
     var volumeCheckSeconds: Double = 0.5
 
     // MARK: - Lock

@@ -3,16 +3,16 @@
 //  mac-rise
 //
 //  Dropdown panel content when alarm is scheduled but not ringing.
-//  Shows: hero time, action buttons, info cards, footer.
-//  Design follows LookAway's idle state layout.
 //
 
 import SwiftUI
 
 struct IdleStatusView: View {
     @Bindable var appState: AppState
+    @Environment(\.openWindow) private var openWindow
 
     private var config: AlarmConfiguration { appState.alarmConfiguration }
+    private var engine: AlarmEngine { appState.alarmEngine }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,10 +38,12 @@ struct IdleStatusView: View {
             // MARK: - Action buttons
             HStack(spacing: 10) {
                 DropdownPillButton(title: "Edit", icon: nil, isPrimary: false) {
-                    // TODO: Open settings/edit alarm
+                    appState.resetOnboarding()
+                    openWindow(id: "onboarding")
                 }
                 DropdownPillButton(title: "Skip", icon: "forward.end.fill", isPrimary: false) {
-                    // TODO: Skip next alarm
+                    // Re-schedule for tomorrow
+                    engine.scheduleNextAlarm()
                 }
             }
             .padding(.horizontal, 20)
@@ -67,8 +69,7 @@ struct IdleStatusView: View {
                     icon: "speaker.wave.2.fill",
                     iconColor: MacRiseColors.iconCyan,
                     label: "Volume",
-                    value: "\(config.startingVolume) → \(config.targetVolume) (+1 every \(config.increaseInterval)s)",
-                    progress: Double(config.startingVolume) / Double(config.maxVolumeLevel)
+                    value: "\(config.startingVolume) → \(config.targetVolume) (+1 every \(config.increaseInterval)s)"
                 )
 
                 DropdownInfoCardToggle(
@@ -77,53 +78,41 @@ struct IdleStatusView: View {
                     label: "Auto-wake",
                     isOn: Binding(
                         get: { config.autoWake },
-                        set: { appState.alarmConfiguration.autoWake = $0 }
+                        set: { appState.alarmConfiguration.autoWake = $0; appState.saveSettings() }
                     )
                 )
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
 
-            // MARK: - Footer
-            VStack(spacing: 8) {
-                // Test Alarm button
-                Button(action: { /* TODO: Trigger test alarm */ }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "alarm.waves.left.and.right")
-                            .font(.system(size: 13, weight: .medium))
-                        Text("Test Alarm")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.white.opacity(0.08))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
-                            )
-                    )
+            // MARK: - Test Alarm button
+            Button(action: { engine.testAlarm() }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "alarm.waves.left.and.right")
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Test Alarm")
+                        .font(.system(size: 14, weight: .semibold))
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
-
-                // Quit link
-                Button(action: { NSApplication.shared.terminate(nil) }) {
-                    Text("Quit MacRise")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(.white.opacity(0.35))
-                }
-                .buttonStyle(.plain)
-                .padding(.bottom, 14)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 11)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.white.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+                        )
+                )
             }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
     }
 
     private var musicDisplayValue: String {
         let dir = config.musicDirectory
-        let short = dir.count > 18 ? "~/mac-rise/m..." : dir
-        return "\(short)"
+        return dir.count > 18 ? "~/mac-rise/m..." : dir
     }
 }

@@ -3,21 +3,18 @@
 //  mac-rise
 //
 //  Global application state managing top-level navigation and shared context.
-//  Uses the modern @Observable macro for granular SwiftUI reactivity.
 //
 
 import SwiftUI
 
-/// The possible top-level screens / routes in the app.
 enum AppRoute: Equatable {
     case onboarding
-    case main          // Menu bar is active, dropdown panel
+    case main
     case settings
     case login
     case subscription
 }
 
-/// Global application state — injected into the environment.
 @Observable
 final class AppState {
     // MARK: - Navigation
@@ -27,11 +24,14 @@ final class AppState {
     var alarmConfiguration = AlarmConfiguration()
     var alarmState: AlarmState = .idle
 
-    // MARK: - Auth (scaffold for future)
+    // MARK: - Engine
+    let alarmEngine = AlarmEngine()
+
+    // MARK: - Auth (scaffold)
     var isAuthenticated: Bool = false
     var userEmail: String? = nil
 
-    // MARK: - Subscription (scaffold for future)
+    // MARK: - Subscription (scaffold)
     var isSubscribed: Bool = false
     var subscriptionTier: String? = nil
 
@@ -43,11 +43,8 @@ final class AppState {
 
     init(settingsService: SettingsServiceProtocol = SettingsService()) {
         self.settingsService = settingsService
-
-        // Load persisted state
         self.alarmConfiguration = settingsService.loadConfiguration()
 
-        // Determine initial route
         if settingsService.hasCompletedOnboarding {
             self.currentRoute = .main
             self.alarmState = .idle
@@ -55,6 +52,9 @@ final class AppState {
             self.currentRoute = .onboarding
             self.alarmState = .idle
         }
+
+        // Attach engine
+        alarmEngine.attach(to: self)
     }
 
     // MARK: - Actions
@@ -64,10 +64,13 @@ final class AppState {
         settingsService.hasCompletedOnboarding = true
         alarmState = .idle
         currentRoute = .main
+        // Schedule the alarm
+        alarmEngine.scheduleNextAlarm()
     }
 
     func saveSettings() {
         settingsService.saveConfiguration(alarmConfiguration)
+        alarmEngine.scheduleNextAlarm()
     }
 
     func resetOnboarding() {
@@ -78,22 +81,5 @@ final class AppState {
 
     func navigateTo(_ route: AppRoute) {
         currentRoute = route
-    }
-
-    // MARK: - Alarm state transitions
-
-    /// Start the alarm ringing with the lock duration from config
-    func startAlarm() {
-        alarmState = .ringing(remainingSeconds: alarmConfiguration.lockDurationSeconds)
-    }
-
-    /// Stop the alarm (only valid after lock expires)
-    func stopAlarm() {
-        alarmState = .idle
-    }
-
-    /// Simulate ringing for testing (with a short duration)
-    func testAlarm() {
-        alarmState = .ringing(remainingSeconds: 30)
     }
 }

@@ -26,7 +26,7 @@ struct MacRiseApp: App {
 
         // MARK: - Onboarding Window (shown on first launch)
         Window("MacRise Setup", id: "onboarding") {
-            OnboardingView(appState: appState)
+            AppRouter(appState: appState)
                 .preferredColorScheme(.dark)
         }
         .windowStyle(.hiddenTitleBar)
