@@ -39,8 +39,10 @@ final class AlarmService: AlarmServiceProtocol {
 
     func configurePmsetWake(hour: Int, minute: Int) async throws {
         let wakeTime = String(format: "%02d:%02d:00", hour, minute)
+        let pmsetDisplayTime = Self.pmsetDisplayTime(hour: hour, minute: minute)
 
-        if defaults.string(forKey: configuredWakeTimeKey) == wakeTime {
+        if defaults.string(forKey: configuredWakeTimeKey) == wakeTime,
+           currentPmsetSchedule().contains("wakepoweron at \(pmsetDisplayTime)") {
             return
         }
 
@@ -72,6 +74,30 @@ final class AlarmService: AlarmServiceProtocol {
 
     func removeLaunchAgent() async throws {
         // The app no longer installs a script-backed LaunchAgent.
+    }
+
+    private func currentPmsetSchedule() -> String {
+        let process = Process()
+        let pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
+        process.arguments = ["-g", "sched"]
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            return String(data: data, encoding: .utf8) ?? ""
+        } catch {
+            return ""
+        }
+    }
+
+    private static func pmsetDisplayTime(hour: Int, minute: Int) -> String {
+        let displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)
+        let suffix = hour < 12 ? "AM" : "PM"
+        return String(format: "%d:%02d%@", displayHour, minute, suffix)
     }
 }
 
