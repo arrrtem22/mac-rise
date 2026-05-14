@@ -36,6 +36,17 @@ struct AlarmConfiguration: Codable, Equatable {
     // MARK: - Computed
     var lockDurationSeconds: Int { lockDurationMinutes * 60 }
 
+    var wakeHour: Int {
+        if alarmMinute == 0 {
+            return (alarmHour + 23) % 24
+        }
+        return alarmHour
+    }
+
+    var wakeMinute: Int {
+        alarmMinute == 0 ? 59 : alarmMinute - 1
+    }
+
     var alarmTimeFormatted: String {
         let ampm = alarmHour < 12 ? "AM" : "PM"
         let h = alarmHour == 0 ? 12 : (alarmHour > 12 ? alarmHour - 12 : alarmHour)
@@ -43,9 +54,8 @@ struct AlarmConfiguration: Codable, Equatable {
     }
 
     var wakeTimeFormatted: String {
-        var wH = alarmHour
-        var wM = alarmMinute - 1
-        if wM < 0 { wM = 59; wH = max(0, wH - 1) }
+        let wH = wakeHour
+        let wM = wakeMinute
         let ampm = wH < 12 ? "AM" : "PM"
         let h = wH == 0 ? 12 : (wH > 12 ? wH - 12 : wH)
         return String(format: "%d:%02d %@", h, wM, ampm)

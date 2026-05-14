@@ -28,6 +28,8 @@ final class AlarmEngine {
     @ObservationIgnored private let audioService = AudioService()
     @ObservationIgnored private let volumeService = VolumeService()
     @ObservationIgnored private let idleService = IdleDetectionService()
+    @ObservationIgnored private let alarmService = AlarmService()
+    @ObservationIgnored private let powerAssertionService = PowerAssertionService()
 
     // MARK: - Internal state
     @ObservationIgnored private var appState: AppState?
@@ -52,6 +54,14 @@ final class AlarmEngine {
     func scheduleNextAlarm() {
         scheduledAlarmTimer?.invalidate()
         guard let config = appState?.alarmConfiguration else { return }
+
+        Task {
+            do {
+                try await alarmService.scheduleAlarm(config: config)
+            } catch {
+                print("[AlarmEngine] Failed to configure macOS wake: \(error.localizedDescription)")
+            }
+        }
 
         let calendar = Calendar.current
         let now = Date()
@@ -119,6 +129,7 @@ final class AlarmEngine {
 
         // Set initial volume
         volumeService.setVolume(currentVolume, maxLevel: config.maxVolumeLevel)
+        powerAssertionService.begin(reason: "MacRise alarm is ringing")
 
         // Update AppState
         appState?.alarmState = .ringing(remainingSeconds: remainingSeconds)
@@ -146,6 +157,7 @@ final class AlarmEngine {
         volumeCheckTimer = nil
         countdownTimer = nil
         audioService.stop()
+        powerAssertionService.end()
         isRunning = false
         currentTrackName = "—"
         appState?.alarmState = .idle
