@@ -16,6 +16,8 @@ final class OnboardingViewModel {
 
     // MARK: - Reference to global state
     private let appState: AppState
+    private let audioService = AudioService()
+    private let volumeService = VolumeService()
 
     // MARK: - Convenience accessors to alarm config
     var config: AlarmConfiguration {
@@ -43,6 +45,31 @@ final class OnboardingViewModel {
 
     func previousStep() {
         goToStep(max(0, currentStep - 1))
+    }
+
+    // MARK: - Volume Preview
+
+    func previewVolume(level: Int) {
+        volumeService.setVolume(level, maxLevel: config.maxVolumeLevel)
+
+        guard let track = previewTrack() else { return }
+        audioService.play(track: track)
+    }
+
+    private func previewTrack() -> URL? {
+        let directory: URL
+        if let customMusicURL = config.customMusicURL {
+            directory = customMusicURL
+        } else {
+            directory = URL(fileURLWithPath: NSString(string: config.musicDirectory).expandingTildeInPath)
+        }
+
+        if let track = try? audioService.loadTracks(from: directory).randomElement() {
+            return track
+        }
+
+        let fallback = URL(fileURLWithPath: NSString(string: "~/projects/mac-rise/music").expandingTildeInPath)
+        return try? audioService.loadTracks(from: fallback).randomElement()
     }
 
     // MARK: - Completion

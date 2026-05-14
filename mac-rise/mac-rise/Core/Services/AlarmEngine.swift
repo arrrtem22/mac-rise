@@ -232,7 +232,7 @@ final class AlarmEngine {
                 // Check for user activity (idle < 5 seconds means activity)
                 if idleTime < 5 {
                     isMovementDetected = true
-                    print("[AlarmEngine] Activity detected (idle: \(Int(idleTime))s)! Volume locked at \(currentVolume).")
+                    print("[AlarmEngine] Activity detected (idle: \(Int(idleTime))s)! Volume can be lowered to starting level \(config.startingVolume).")
                 } else if elapsed >= Double(config.increaseInterval) {
                     // Time to increase volume
                     if currentVolume < config.targetVolume {
@@ -244,9 +244,8 @@ final class AlarmEngine {
             }
         }
 
-        // STRICT ENFORCEMENT: Always enforce minimum volume during alarm (even after movement detected).
-        // This makes sure the user cannot decrease it lower than the locked volume.
-        volumeService.setVolumeIfBelow(currentVolume, maxLevel: config.maxVolumeLevel)
+        let enforcedMinimum = isMovementDetected ? config.startingVolume : currentVolume
+        volumeService.setVolumeIfBelow(enforcedMinimum, maxLevel: config.maxVolumeLevel)
         actualSystemVolume = volumeService.getCurrentVolume()
     }
 

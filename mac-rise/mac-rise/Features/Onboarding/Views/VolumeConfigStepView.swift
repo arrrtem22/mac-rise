@@ -29,16 +29,23 @@ struct VolumeConfigStepView: View {
                 VolumeCard(
                     title: "Starting volume",
                     subtitle: "Volume when alarm begins",
+                    warning: "Important: this is the minimum volume during the alarm. After volume increases, you can lower it only back to this level.",
                     options: startOptions,
                     selected: viewModel.config.startingVolume,
-                    onSelect: { viewModel.config.startingVolume = $0 }
+                    onSelect: {
+                        viewModel.config.startingVolume = $0
+                        viewModel.previewVolume(level: $0)
+                    }
                 )
                 VolumeCard(
                     title: "Target volume",
                     subtitle: "Max volume to reach",
                     options: targetOptions,
                     selected: viewModel.config.targetVolume,
-                    onSelect: { viewModel.config.targetVolume = $0 }
+                    onSelect: {
+                        viewModel.config.targetVolume = $0
+                        viewModel.previewVolume(level: $0)
+                    }
                 )
             }
             .padding(.horizontal, 36)
@@ -94,6 +101,7 @@ struct VolumeConfigStepView: View {
 struct VolumeCard: View {
     let title: String
     let subtitle: String
+    var warning: String? = nil
     let options: [Int]
     let selected: Int
     let onSelect: (Int) -> Void
@@ -108,6 +116,13 @@ struct VolumeCard: View {
                     .font(MacRiseTypography.labelSmall)
                     .foregroundColor(MacRiseColors.textTertiary)
                     .lineLimit(2)
+                if let warning {
+                    Text(warning)
+                        .font(MacRiseTypography.labelSmall)
+                        .foregroundColor(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                }
             }
 
             let cols = [GridItem(.flexible()), GridItem(.flexible())]
