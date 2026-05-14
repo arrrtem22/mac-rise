@@ -3,12 +3,12 @@
 //  mac-rise
 //
 //  Shared UI components used within the menu bar dropdown panel.
-//  Includes pill buttons, info cards, and toggle cards.
+//  Styled to match LookAway's native macOS popover aesthetic.
 //
 
 import SwiftUI
 
-// MARK: - Dropdown pill button (like LookAway's "Start break" / "+1m" / "+5m")
+// MARK: - Dropdown pill button
 
 struct DropdownPillButton: View {
     let title: String
@@ -24,19 +24,19 @@ struct DropdownPillButton: View {
                         .font(.system(size: 11, weight: .medium))
                 }
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13, weight: .semibold))
             }
-            .foregroundColor(.white.opacity(isPrimary ? 0.90 : 0.70))
-            .padding(.horizontal, 16)
+            .foregroundColor(.white.opacity(isPrimary ? 1.0 : 0.75))
+            .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 20)
+                Capsule()
                     .fill(isPrimary
-                          ? Color.white.opacity(0.14)
-                          : Color.white.opacity(0.06))
+                          ? Color.white.opacity(0.15)
+                          : Color.clear)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(Color.white.opacity(isPrimary ? 0.18 : 0.10), lineWidth: 1)
+                        Capsule()
+                            .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
                     )
             )
         }
@@ -44,7 +44,7 @@ struct DropdownPillButton: View {
     }
 }
 
-// MARK: - Dropdown info card (single row: icon + label + value)
+// MARK: - Dropdown info card (single row: icon badge + label + value)
 
 struct DropdownInfoCard: View {
     let icon: String
@@ -54,21 +54,22 @@ struct DropdownInfoCard: View {
     var isSubtitle: Bool = false
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
+            // Colored icon badge (matches LookAway's rounded square badges)
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(iconColor.opacity(0.14))
-                    .frame(width: 30, height: 30)
+                    .fill(iconColor)
+                    .frame(width: 32, height: 32)
                 Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundColor(iconColor)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
             }
 
             if isSubtitle {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(label)
                         .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(.white.opacity(0.45))
+                        .foregroundColor(.white.opacity(0.50))
                     Text(value)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
@@ -76,13 +77,13 @@ struct DropdownInfoCard: View {
                 }
             } else {
                 Text(label)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
 
                 Spacer()
 
                 Text(value)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white.opacity(0.55))
                     .lineLimit(1)
             }
@@ -91,14 +92,7 @@ struct DropdownInfoCard: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
-                )
-        )
+        .background(cardBackground)
     }
 }
 
@@ -111,39 +105,30 @@ struct DropdownInfoCardWithBar: View {
     let value: String
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(iconColor.opacity(0.14))
-                        .frame(width: 30, height: 30)
-                    Image(systemName: icon)
-                        .font(.system(size: 13))
-                        .foregroundColor(iconColor)
-                }
-
-                Text(label)
-                    .font(.system(size: 14, weight: .medium))
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(iconColor)
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
-
-                Spacer()
-
-                Text(value)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.45))
-                    .lineLimit(1)
             }
+
+            Text(label)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
+
+            Spacer()
+
+            Text(value)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white.opacity(0.45))
+                .lineLimit(1)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
-                )
-        )
+        .background(cardBackground)
     }
 }
 
@@ -156,18 +141,18 @@ struct DropdownInfoCardToggle: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(iconColor.opacity(0.14))
-                    .frame(width: 30, height: 30)
+                    .fill(iconColor)
+                    .frame(width: 32, height: 32)
                 Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundColor(iconColor)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
             }
 
             Text(label)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.white)
 
             Spacer()
@@ -179,13 +164,71 @@ struct DropdownInfoCardToggle: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
-                )
-        )
+        .background(cardBackground)
+    }
+}
+
+// MARK: - Shared card background (lighter than the panel — pops out like LookAway)
+
+private var cardBackground: some View {
+    RoundedRectangle(cornerRadius: 12)
+        .fill(Color.white.opacity(0.08))
+}
+
+// MARK: - Visual Effect View (Blur)
+
+struct VisualEffectView: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+    let blendingMode: NSVisualEffectView.BlendingMode
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+        view.material = material
+        view.blendingMode = blendingMode
+    }
+}
+
+struct MenuBarWindowAppearanceConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            configureWindow(for: view)
+        }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        DispatchQueue.main.async {
+            configureWindow(for: view)
+        }
+    }
+
+    private func configureWindow(for view: NSView) {
+        guard let window = view.window else { return }
+
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+
+        clearBackgrounds(startingAt: window.contentView)
+        clearBackgrounds(startingAt: view)
+    }
+
+    private func clearBackgrounds(startingAt view: NSView?) {
+        var currentView = view
+        while let view = currentView {
+            view.wantsLayer = true
+            view.layer?.backgroundColor = NSColor.clear.cgColor
+            currentView = view.superview
+        }
     }
 }
