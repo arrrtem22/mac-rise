@@ -25,7 +25,7 @@ final class AppState {
 
     // MARK: - Alarm
     var alarmConfiguration = AlarmConfiguration()
-    var alarmState: AlarmState = .disabled
+    var alarmState: AlarmState = .idle
 
     // MARK: - Auth (scaffold for future)
     var isAuthenticated: Bool = false
@@ -50,8 +50,10 @@ final class AppState {
         // Determine initial route
         if settingsService.hasCompletedOnboarding {
             self.currentRoute = .main
+            self.alarmState = .idle
         } else {
             self.currentRoute = .onboarding
+            self.alarmState = .idle
         }
     }
 
@@ -60,6 +62,7 @@ final class AppState {
     func completeOnboarding() {
         settingsService.saveConfiguration(alarmConfiguration)
         settingsService.hasCompletedOnboarding = true
+        alarmState = .idle
         currentRoute = .main
     }
 
@@ -75,5 +78,22 @@ final class AppState {
 
     func navigateTo(_ route: AppRoute) {
         currentRoute = route
+    }
+
+    // MARK: - Alarm state transitions
+
+    /// Start the alarm ringing with the lock duration from config
+    func startAlarm() {
+        alarmState = .ringing(remainingSeconds: alarmConfiguration.lockDurationSeconds)
+    }
+
+    /// Stop the alarm (only valid after lock expires)
+    func stopAlarm() {
+        alarmState = .idle
+    }
+
+    /// Simulate ringing for testing (with a short duration)
+    func testAlarm() {
+        alarmState = .ringing(remainingSeconds: 30)
     }
 }

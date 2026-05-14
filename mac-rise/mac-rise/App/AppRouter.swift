@@ -3,6 +3,8 @@
 //  mac-rise
 //
 //  Top-level view router that maps AppRoute to the correct feature view.
+//  Used within the onboarding Window scene. The menu bar dropdown is
+//  handled separately via MenuBarExtra in MacRiseApp.
 //
 
 import SwiftUI
@@ -17,19 +19,17 @@ struct AppRouter: View {
                 OnboardingView(appState: appState)
 
             case .main:
-                // TODO: Replace with actual MenuBarPanel once implemented
-                MainPlaceholderView(appState: appState)
+                // Menu bar is now the main interface — show a minimal "setup complete" view
+                // that auto-closes or tells the user to use the menu bar.
+                SetupCompleteView(appState: appState)
 
             case .settings:
-                // TODO: Replace with actual SettingsView once implemented
                 SettingsView(appState: appState)
 
             case .login:
-                // TODO: Replace with actual LoginView once implemented
                 LoginView(appState: appState)
 
             case .subscription:
-                // TODO: Replace with actual SubscriptionView once implemented
                 SubscriptionView(appState: appState)
             }
         }
@@ -38,34 +38,42 @@ struct AppRouter: View {
     }
 }
 
-// MARK: - Temporary main placeholder (until MenuBar feature is built)
+// MARK: - Setup Complete (shown after onboarding, prompts to use menu bar)
 
-struct MainPlaceholderView: View {
+struct SetupCompleteView: View {
     @Bindable var appState: AppState
+    @Environment(\.dismissWindow) private var dismissWindow
 
     var body: some View {
         ZStack {
             MacRiseBackground()
 
             VStack(spacing: MacRiseSpacing.lg) {
-                Image(systemName: "alarm.fill")
-                    .font(.system(size: 48))
-                    .foregroundColor(MacRiseColors.accentOrange)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 52))
+                    .foregroundColor(MacRiseColors.success)
 
-                Text("MacRise is Active")
+                Text("MacRise is Running")
                     .font(MacRiseTypography.sectionTitle)
                     .foregroundColor(MacRiseColors.textPrimary)
 
-                Text("Next alarm: \(appState.alarmConfiguration.alarmTimeFormatted)")
+                Text("Click the alarm icon in the menu bar\nto view your alarm status and settings.")
                     .font(MacRiseTypography.body)
                     .foregroundColor(MacRiseColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
 
-                VStack(spacing: MacRiseSpacing.md) {
-                    PillButton(title: "Open Settings", style: .outlined) {
-                        appState.navigateTo(.settings)
+                Text("Next alarm: \(appState.alarmConfiguration.alarmTimeFormatted)")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(MacRiseColors.accentOrange)
+                    .padding(.top, 4)
+
+                HStack(spacing: 14) {
+                    PillButton(title: "Close Window", style: .outlined) {
+                        dismissWindow(id: "onboarding")
                     }
 
-                    PillButton(title: "Re-run Onboarding", style: .outlined) {
+                    PillButton(title: "Re-run Setup", style: .outlined) {
                         appState.resetOnboarding()
                     }
                 }
