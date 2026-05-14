@@ -18,6 +18,7 @@ final class OnboardingViewModel {
     private let appState: AppState
     private let audioService = AudioService()
     private let volumeService = VolumeService()
+    private var currentPreviewTrack: URL?
 
     // MARK: - Convenience accessors to alarm config
     var config: AlarmConfiguration {
@@ -52,7 +53,10 @@ final class OnboardingViewModel {
     func previewVolume(level: Int) {
         volumeService.setVolume(level, maxLevel: config.maxVolumeLevel)
 
-        guard let track = previewTrack() else { return }
+        if audioService.isPlaying { return }
+
+        guard let track = currentPreviewTrack ?? previewTrack() else { return }
+        currentPreviewTrack = track
         audioService.play(track: track)
     }
 
