@@ -81,15 +81,24 @@ struct MenuBarDropdownView: View {
 
             Spacer()
 
-            // Gear icon
-            Button(action: { /* TODO: Open settings */ }) {
+            // Gear menu
+            Menu {
+                Button("Open Logs Folder") {
+                    Logger.openLogsFolder()
+                }
+                Divider()
+                Button("Quit MacRise") {
+                    NSApplication.shared.terminate(nil)
+                }
+            } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white.opacity(0.45))
                     .frame(width: 30, height: 30)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .menuStyle(.borderlessButton)
+            .frame(width: 30, height: 30)
         }
     }
 }

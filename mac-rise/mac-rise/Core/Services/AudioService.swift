@@ -48,7 +48,7 @@ final class AudioService: AudioServiceProtocol {
             currentTrackName = track.deletingPathExtension().lastPathComponent
             isPlaying = true
         } catch {
-            print("[AudioService] Failed to play \(track.lastPathComponent): \(error)")
+            Logger.log("[AudioService] Failed to play \(track.lastPathComponent): \(error)")
             isPlaying = false
             currentTrackName = nil
         }

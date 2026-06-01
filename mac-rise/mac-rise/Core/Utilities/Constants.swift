@@ -39,3 +39,49 @@ enum AppConstants {
         static let githubURL = "https://github.com/arrrtem22/mac-rise-music"
     }
 }
+
+import AppKit
+
+final class Logger {
+    static let shared = Logger()
+    private let fileURL: URL
+    private let queue = DispatchQueue(label: "app.macrise.logger")
+    
+    private init() {
+        let fileManager = FileManager.default
+        let libraryDir = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first!
+        let logsDir = libraryDir.appendingPathComponent("Logs/mac-rise")
+        
+        try? fileManager.createDirectory(at: logsDir, withIntermediateDirectories: true)
+        fileURL = logsDir.appendingPathComponent("mac-rise.log")
+        
+        if !fileManager.fileExists(atPath: fileURL.path) {
+            fileManager.createFile(atPath: fileURL.path, contents: nil)
+        }
+    }
+    
+    static func log(_ message: String) {
+        print(message)
+        shared.queue.async {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+            let timestamp = formatter.string(from: Date())
+            let logLine = "[\(timestamp)] \(message)\n"
+            
+            if let data = logLine.data(using: .utf8) {
+                if let fileHandle = try? FileHandle(forWritingTo: shared.fileURL) {
+                    fileHandle.seekToEndOfFile()
+                    fileHandle.write(data)
+                    fileHandle.closeFile()
+                }
+            }
+        }
+    }
+    
+    static func openLogsFolder() {
+        let fileManager = FileManager.default
+        let libraryDir = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first!
+        let logsDir = libraryDir.appendingPathComponent("Logs/mac-rise")
+        NSWorkspace.shared.open(logsDir)
+    }
+}

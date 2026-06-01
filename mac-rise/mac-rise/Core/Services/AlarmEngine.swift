@@ -59,7 +59,7 @@ final class AlarmEngine {
             do {
                 try await alarmService.scheduleAlarm(config: config)
             } catch {
-                print("[AlarmEngine] Failed to configure macOS wake: \(error.localizedDescription)")
+                Logger.log("[AlarmEngine] Failed to configure macOS wake: \(error.localizedDescription)")
             }
         }
 
@@ -78,11 +78,24 @@ final class AlarmEngine {
         }
 
         let interval = alarmDate.timeIntervalSince(now)
-        print("[AlarmEngine] Next alarm scheduled for \(alarmDate) (in \(Int(interval))s)")
+        Logger.log("[AlarmEngine] Next alarm scheduled for \(alarmDate) (in \(Int(interval))s)")
 
-        scheduledAlarmTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
+        let timer = Timer(fire: alarmDate, interval: 0, repeats: false) { [weak self] _ in
+            let now = Date()
+            let diff = now.timeIntervalSince(alarmDate)
+            
+            // If the timer fired more than 15 minutes late, we missed it (e.g., Mac was deeply asleep).
+            // Skip the alarm and just schedule for the next day.
+            if diff > 900 {
+                Logger.log("[AlarmEngine] Alarm missed its scheduled time by \(Int(diff))s. Skipping and rescheduling.")
+                self?.scheduleNextAlarm()
+                return
+            }
+            
             self?.startAlarm()
         }
+        RunLoop.main.add(timer, forMode: .common)
+        scheduledAlarmTimer = timer
     }
 
     // MARK: - Start Alarm
@@ -109,7 +122,7 @@ final class AlarmEngine {
         }
 
         guard !tracks.isEmpty else {
-            print("[AlarmEngine] No tracks found! Cannot start alarm.")
+            Logger.log("[AlarmEngine] No tracks found! Cannot start alarm.")
             return
         }
 
@@ -134,7 +147,7 @@ final class AlarmEngine {
         // Update AppState
         appState?.alarmState = .ringing(remainingSeconds: remainingSeconds)
 
-        print("[AlarmEngine] Alarm started! \(tracks.count) tracks, lock: \(config.lockDurationMinutes) min")
+        Logger.log("[AlarmEngine] Alarm started! \(tracks.count) tracks, lock: \(config.lockDurationMinutes) min")
 
         // Start playing
         playNextTrack()
@@ -162,7 +175,7 @@ final class AlarmEngine {
         currentTrackName = "—"
         appState?.alarmState = .idle
 
-        print("[AlarmEngine] Alarm stopped.")
+        Logger.log("[AlarmEngine] Alarm stopped.")
 
         // Schedule next alarm for tomorrow
         scheduleNextAlarm()
@@ -205,12 +218,12 @@ final class AlarmEngine {
         if currentTrackName.count > 28 {
             currentTrackName = String(currentTrackName.prefix(25)) + "..."
         }
-        print("[AlarmEngine] Playing: \(currentTrackName)")
+        Logger.log("[AlarmEngine] Playing: \(currentTrackName)")
     }
 
     private func onTrackEnded() {
         guard isRunning, remainingSeconds > 0 else { return }
-        print("[AlarmEngine] Track finished, switching to next.")
+        Logger.log("[AlarmEngine] Track finished, switching to next.")
         playNextTrack()
     }
 
@@ -244,12 +257,12 @@ final class AlarmEngine {
                 // Check for user activity (idle < 5 seconds means activity)
                 if idleTime < 5 {
                     isMovementDetected = true
-                    print("[AlarmEngine] Activity detected (idle: \(Int(idleTime))s)! Volume can be lowered to starting level \(config.startingVolume).")
+                    Logger.log("[AlarmEngine] Activity detected (idle: \(Int(idleTime))s)! Volume can be lowered to starting level \(config.startingVolume).")
                 } else if elapsed >= Double(config.increaseInterval) {
                     // Time to increase volume
                     if currentVolume < config.targetVolume {
                         currentVolume += 1
-                        print("[AlarmEngine] No activity (idle: \(Int(idleTime))s). Volume → \(currentVolume)")
+                        Logger.log("[AlarmEngine] No activity (idle: \(Int(idleTime))s). Volume → \(currentVolume)")
                     }
                     lastVolumeIncreaseTime = Date()
                 }
@@ -270,7 +283,7 @@ final class AlarmEngine {
             self.appState?.alarmState = .ringing(remainingSeconds: max(0, self.remainingSeconds))
 
             if self.remainingSeconds <= 0 {
-                print("[AlarmEngine] Lock duration reached. Stopping alarm.")
+                Logger.log("[AlarmEngine] Lock duration reached. Stopping alarm.")
                 self.stopAlarm()
             }
         }

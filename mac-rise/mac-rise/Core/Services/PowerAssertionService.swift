@@ -37,7 +37,7 @@ final class PowerAssertionService {
         if result == kIOReturnSuccess {
             assertionIDs.append(assertionID)
         } else {
-            print("[PowerAssertionService] Failed to create \(type) assertion: \(result)")
+            Logger.log("[PowerAssertionService] Failed to create \(type) assertion: \(result)")
         }
     }
 }

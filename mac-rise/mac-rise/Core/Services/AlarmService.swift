@@ -60,7 +60,7 @@ final class AlarmService: AlarmServiceProtocol {
             }
 
             defaults.set(wakeTime, forKey: configuredWakeTimeKey)
-            print("[AlarmService] Configured macOS wake/power-on for \(wakeTime)")
+            Logger.log("[AlarmService] Configured macOS wake/power-on for \(wakeTime)")
         }
     }
 

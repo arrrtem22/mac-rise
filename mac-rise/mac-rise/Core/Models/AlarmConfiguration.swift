@@ -37,14 +37,11 @@ struct AlarmConfiguration: Codable, Equatable {
     var lockDurationSeconds: Int { lockDurationMinutes * 60 }
 
     var wakeHour: Int {
-        if alarmMinute == 0 {
-            return (alarmHour + 23) % 24
-        }
         return alarmHour
     }
 
     var wakeMinute: Int {
-        alarmMinute == 0 ? 59 : alarmMinute - 1
+        return alarmMinute
     }
 
     var alarmTimeFormatted: String {
