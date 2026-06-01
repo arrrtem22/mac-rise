@@ -13,7 +13,7 @@ protocol AlarmServiceProtocol {
     func cancelAlarm() async throws
     func configurePmsetWake(hour: Int, minute: Int) async throws
     func clearPmsetWakeConfiguration()
-    func installLaunchAgent() async throws
+    func installLaunchAgent(config: AlarmConfiguration) async throws
     func removeLaunchAgent() async throws
 }
 
@@ -28,13 +28,16 @@ final class AlarmService: AlarmServiceProtocol {
     func scheduleAlarm(config: AlarmConfiguration) async throws {
         if config.autoWake {
             try await configurePmsetWake(hour: config.wakeHour, minute: config.wakeMinute)
+            try await installLaunchAgent(config: config)
         } else {
             clearPmsetWakeConfiguration()
+            try await removeLaunchAgent()
         }
     }
 
     func cancelAlarm() async throws {
         clearPmsetWakeConfiguration()
+        try await removeLaunchAgent()
     }
 
     func configurePmsetWake(hour: Int, minute: Int) async throws {
@@ -68,12 +71,74 @@ final class AlarmService: AlarmServiceProtocol {
         defaults.removeObject(forKey: configuredWakeTimeKey)
     }
 
-    func installLaunchAgent() async throws {
-        // The app no longer installs a script-backed LaunchAgent.
+    func installLaunchAgent(config: AlarmConfiguration) async throws {
+        let fileManager = FileManager.default
+        guard let libraryDir = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first else { return }
+        let launchAgentsDir = libraryDir.appendingPathComponent("LaunchAgents")
+        try? fileManager.createDirectory(at: launchAgentsDir, withIntermediateDirectories: true)
+        
+        let plistURL = launchAgentsDir.appendingPathComponent("app.macrise.alarm.plist")
+        
+        let plistString = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>Label</key>
+            <string>app.macrise.alarm</string>
+            <key>ProgramArguments</key>
+            <array>
+                <string>/usr/bin/open</string>
+                <string>-g</string>
+                <string>-b</string>
+                <string>app.macrise.mac-rise</string>
+            </array>
+            <key>RunAtLoad</key>
+            <false/>
+            <key>StartCalendarInterval</key>
+            <dict>
+                <key>Hour</key>
+                <integer>\\(config.alarmHour)</integer>
+                <key>Minute</key>
+                <integer>\\(config.alarmMinute)</integer>
+            </dict>
+        </dict>
+        </plist>
+        """
+        
+        try plistString.write(to: plistURL, atomically: true, encoding: .utf8)
+        
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = ["unload", plistURL.path]
+        try? process.run()
+        process.waitUntilExit()
+        
+        let loadProcess = Process()
+        loadProcess.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        loadProcess.arguments = ["load", plistURL.path]
+        try loadProcess.run()
+        loadProcess.waitUntilExit()
+        
+        Logger.log("[AlarmService] Installed LaunchAgent for \\(config.alarmHour):\\(String(format: "%02d", config.alarmMinute))")
     }
 
     func removeLaunchAgent() async throws {
-        // The app no longer installs a script-backed LaunchAgent.
+        let fileManager = FileManager.default
+        guard let libraryDir = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first else { return }
+        let launchAgentsDir = libraryDir.appendingPathComponent("LaunchAgents")
+        let plistURL = launchAgentsDir.appendingPathComponent("app.macrise.alarm.plist")
+        
+        if fileManager.fileExists(atPath: plistURL.path) {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            process.arguments = ["unload", plistURL.path]
+            try? process.run()
+            process.waitUntilExit()
+            
+            try? fileManager.removeItem(at: plistURL)
+            Logger.log("[AlarmService] Removed LaunchAgent")
+        }
     }
 
     private func currentPmsetSchedule() -> String {
